@@ -27,7 +27,8 @@ const Create = () => {
   const openPicker = async (selectType) => {
     try{
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: selectType === 'image' ? ImagePicker.MediaTypeOptions.Images : ImagePicker.MediaTypeOptions.Videos,
+      mediaTypes: ["images"],
+      mediaTypes: ["videos"],
       aspect: [4, 3],
       quality: 1,
     });
@@ -134,12 +135,7 @@ const Create = () => {
           otherStyles="mt-7"
         />
 
-        <CustomButton
-          title="Submit & Publish"
-          handlePress={submit}
-          containerStyles="mt-7"
-          isLoading={uploading}
-        />
+        <Cus
       </ScrollView>
     </SafeAreaView>
   );

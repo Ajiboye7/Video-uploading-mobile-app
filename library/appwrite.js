@@ -302,6 +302,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const config = {
   endpoint: "https://cloud.appwrite.io/v1",
+  
   platform: "com.ajiboyedev.aora",
   projectId: "66e168a900130ea9ac05",
   databaseId: "66e16c380011e90b87d8",
@@ -334,7 +335,7 @@ const avatars = new Avatars(client);
 const databases = new Databases(client);
 const storage = new Storage(client)
 
-export const createUser = async (email, password, username) => {
+{/*export const createUser = async (email, password, username) => {
   try {
     const newAccount = await account.create(ID.unique(), email, password, username);
 
@@ -360,9 +361,52 @@ export const createUser = async (email, password, username) => {
     console.log(error);
     throw new Error(error.message);
   }
+};*/}
+
+
+export const createUser = async (email, password, username) => {
+  try {
+    // 1. First check for existing sessions and clean them up
+    try {
+      const sessions = await account.listSessions();
+      if (sessions.total > 0) {
+        await account.deleteSession('current'); // Delete current session
+      }
+    } catch (sessionError) {
+      console.log("No existing sessions to clean up");
+    }
+
+    // 2. Create the new account
+    const newAccount = await account.create(ID.unique(), email, password, username);
+    if (!newAccount) throw new Error("Account creation failed");
+
+    // 3. Create new session
+    const session = await account.createEmailPasswordSession(email, password);
+    await AsyncStorage.setItem('@appwrite_session', JSON.stringify(session));
+
+    // 4. Create user document
+    const avatarUrl = avatars.getInitials(username);
+    
+    const newUser = await databases.createDocument(
+      databaseId, 
+      userCollectionId,
+      ID.unique(),
+      {
+        accoundId: newAccount.$id, // Fixed typo
+        email,
+        username,
+        avatar: avatarUrl
+      }
+    );
+
+    return newUser;
+  } catch (error) {
+    console.log("Full error:", error);
+    throw new Error(error.message);
+  }
 };
 
-export const signIn = async (email, password) => {
+{/*export const signIn = async (email, password) => {
   try {
     // Check if there are any active sessions
     const sessions = await account.listSessions();
@@ -381,6 +425,28 @@ export const signIn = async (email, password) => {
     return session;
   } catch (error) {
     console.log('Sign in error:', error.message);
+    throw new Error(error.message);
+  }
+};*/}
+
+export const signIn = async (email, password) => {
+  try {
+    // First delete any existing sessions
+    try {
+      const sessions = await account.listSessions();
+      if (sessions.total > 0) {
+        await account.deleteSession('current');
+      }
+    } catch (sessionError) {
+      console.log("No sessions to clean up");
+    }
+
+    // Create new session
+    const session = await account.createEmailPasswordSession(email, password);
+    await AsyncStorage.setItem('@appwrite_session', JSON.stringify(session));
+    return session;
+  } catch (error) {
+    console.log('Sign in error:', error);
     throw new Error(error.message);
   }
 };

@@ -14,7 +14,7 @@ export const GlobalProvider = ({ children }) => {
 
 
   useEffect(() => {
-    // Call the getCurrentUser function
+  
      getCurrentUser()
       .then((res) => {
         if (res) {
